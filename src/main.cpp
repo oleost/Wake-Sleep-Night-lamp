@@ -247,8 +247,13 @@ void partyMode() {
 
 void updateVirtualpins() {
   Blynk.virtualWrite(V0, partymodeButton);
-  Blynk.virtualWrite(V1, inputStart * 60 * 60);
-  Blynk.virtualWrite(V2, inputStop * 60 * 60);
+  char tz[] = "Europe/Oslo";
+  int startAtstart = inputStart * 60 * 60;
+  int stopAtstart = inputStart * 60 * 60;
+  Blynk.virtualWrite(V1, startAtstart, stopAtstart, tz);
+  int startAtstop = inputStop * 60 * 60;
+  int stopAtstop = inputStop * 60 * 60;
+  Blynk.virtualWrite(V2, startAtstop, stopAtstop, tz);
   Blynk.virtualWrite(V3, hueDay);
   Blynk.virtualWrite(V4, satDay);
   Blynk.virtualWrite(V5, briDay);
