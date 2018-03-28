@@ -7,4 +7,4 @@ How to connect Neopixel to an ESP8266 http://www.instructables.com/id/ESP8266-co
 
 Needs blynk account and app on phone, uses two Time input, Start time goes to virtual pin V1 and End time goes to virtual pin V2, also needs RTC time
 
-QR code for Blynk https://imgur.com/a/7QSoQ
+QR code for Blynk https://imgur.com/a/MIwrD
