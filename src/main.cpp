@@ -30,6 +30,7 @@ Sketch uses ArduinoOTA, default password is "Secret"
 #include <FastLED.h>
 #include <WiFiUdp.h>
 #include <ArduinoOTA.h>
+#include <DailyTimer.h>
 
 BlynkTimer timer;
 
