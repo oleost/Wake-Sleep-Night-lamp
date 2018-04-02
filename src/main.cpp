@@ -113,6 +113,8 @@ BLYNK_WRITE(V1) {
   Serial.println();
   inputStart = t.getStartHour();
   inputStartminutes = t.getStartMinute();
+  //Blynk.virtualWrite(V10, inputStart);
+  //Blynk.virtualWrite(V11, inputStartminutes);
 }
 
 BLYNK_WRITE(V2) {
@@ -190,6 +192,7 @@ BLYNK_WRITE(V8)
   briNight = pinValue;
 }
 
+
 void ledOn() {
   for(int i=0;i<NUM_LEDS;i++){
     leds[i] = CHSV( hueDay, satDay, briDay);
@@ -204,7 +207,7 @@ void ledOff() {
  }
 }
 
-DailyTimer writeLedsTimer(
+DailyTimer ledTimer1(
   true,                             // AutoSync true or false, will run the startTimeCallback() if restarts within the active range or after range changes and you are in the range
   inputStart,                               // Start Hour
   inputStartminutes,                               // Start Minute
@@ -287,9 +290,20 @@ void setup()
   int inputStop;
   FastLED.addLeds<NEOPIXEL, DATA_PIN>(leds, NUM_LEDS);
   updateVirtualpins();
-  writeLedsTimer.begin();
+  ledTimer1.begin();
 }
 
+void dailylibtimer() {
+  static unsigned long lastTime = 0;
+  DailyTimer::update();
+  if(millis() - lastTime >= 1000)
+  {
+    char timeBuffer[32] = "";
+    sprintf(timeBuffer, "Time:%2d:%02d:%02d\tDate:%02d/%02d/%4d", hour(), minute(), second(), month(), day(), year());
+    Serial.println(timeBuffer);
+    lastTime = millis();
+  }
+}
 
 void loop()
 {
@@ -300,6 +314,6 @@ void loop()
     partyMode();
   }
   else {
-  DailyTimer::update();
+  dailylibtimer();
 }
 }
