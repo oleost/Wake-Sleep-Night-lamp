@@ -47,7 +47,9 @@ char pass[] = "***";
 // Light start and stop
 
 int inputStart = 7; // Default time on boot
+int inputStartminutes = 0;
 int inputStop = 19; // Default time on boot
+int inputStopminutes = 0;
 int hueDay = 48; // Default hue when time is between time 1 and 2.
 int satDay = 255; // Default sat when time is between time 1 and 2.
 int briDay = 255; // Default brightness when time is between time 1 and 2.
@@ -91,6 +93,7 @@ void clockDisplay()
   Blynk.virtualWrite(V2, currentDate);
 }
 
+
 BLYNK_WRITE(V0)
 {
   int pinValue = param.asInt(); // assigning incoming value from pin V1 to a variable
@@ -104,16 +107,20 @@ BLYNK_WRITE(V0)
 
 BLYNK_WRITE(V1) {
   long startTimeInSecs = param[0].asLong();
+    TimeInputParam t(param);
   Serial.println(startTimeInSecs / 60 / 60);
   Serial.println();
-  inputStart = startTimeInSecs / 60 / 60;
+  inputStart = t.getStartHour();
+  inputStartminutes = t.getStartMinute();
 }
 
 BLYNK_WRITE(V2) {
   long startTimeInSecs = param[0].asLong();
+    TimeInputParam t(param);
   //Serial.println(startTimeInSecs / 60 / 60);
   //Serial.println();
-  inputStop = startTimeInSecs / 60 / 60;
+  inputStop = t.getStartHour();
+  inputStopminutes = t.getStartMinute();
 }
 
 BLYNK_WRITE(V3)
@@ -182,35 +189,34 @@ BLYNK_WRITE(V8)
   briNight = pinValue;
 }
 
-void writeLeds() {
-  unsigned long currentMillis = millis();
-  if (currentMillis - previousMillis >= interval) {
-    previousMillis = currentMillis;
-    //Serial.println(inputStart);
-    //Serial.println(inputStop);
-    if (hour() > inputStart && hour() < inputStop) {
-    /*Serial.println();
-    Serial.print("Time is between ");
-    Serial.print(inputStart);
-    Serial.print(" and ");
-    Serial.print(inputStop);
-    Serial.println();
-    Serial.println(hueDay);
-    */
-      for(int i=0;i<NUM_LEDS;i++){
-        leds[i] = CHSV( hueDay, satDay, briDay);
-      }
-      FastLED.show();
-    }
-    else {
-    //Serial.println("The time is not inside range");
-      for(int i=0;i<NUM_LEDS;i++){
-      leds[i] = CHSV( hueNight, satNight, briNight);
-      FastLED.show();
-      }
-    }
+void ledOn() {
+  for(int i=0;i<NUM_LEDS;i++){
+    leds[i] = CHSV( hueDay, satDay, briDay);
   }
+  FastLED.show();
 }
+
+void ledOff() {
+  for(int i=0;i<NUM_LEDS;i++){
+  leds[i] = CHSV( hueNight, satNight, briNight);
+  FastLED.show();
+ }
+}
+
+DailyTimer writeLedsTimer(
+  true,                             // AutoSync true or false, will run the startTimeCallback() if restarts within the active range or after range changes and you are in the range
+  inputStart,                               // Start Hour
+  inputStartminutes,                               // Start Minute
+  inputStop,                                // End Hour
+  inputStopminutes,                                // End Minute
+  EVERY_DAY,                         // SUNDAYS, MONDAYS, TUESDAYS, WEDNESDAYS, THURSDAYS, FRIDAYS, SATURDAYS, WEEKENDS, WEEKDAYS, or EVERY_DAY
+  FIXED,                            // OPTIONAL - FIXED, RANDOM, RANDOM_START, or RANDOM_END
+  ledOn,                            // pointer to function to execute at Start time, or a Lambda as in this example:
+  ledOff                            // pointer to function to execute at End time
+);
+
+
+
 
 void fadeall() { for(int i = 0; i < NUM_LEDS; i++) { leds[i].nscale8(250); } }
 
@@ -280,6 +286,7 @@ void setup()
   int inputStop;
   FastLED.addLeds<NEOPIXEL, DATA_PIN>(leds, NUM_LEDS);
   updateVirtualpins();
+  writeLedsTimer.begin();
 }
 
 
@@ -292,6 +299,6 @@ void loop()
     partyMode();
   }
   else {
-  writeLeds();
+  DailyTimer::update();
 }
 }
