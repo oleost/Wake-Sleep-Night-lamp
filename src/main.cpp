@@ -48,12 +48,12 @@ char pass[] = "***";
 
 int inputStart = 7; // Default time on boot
 int inputStop = 19; // Default time on boot
-int hueDay = 48; // Default hue when time is between time 1 and 2.
-int satDay = 255; // Default sat when time is between time 1 and 2.
-int briDay = 255; // Default brightness when time is between time 1 and 2.
-int hueNight = 169; // Default hue when time is not between time 1 and 2.
+int hueDay = 136; // Default hue when time is between time 1 and 2.
+int satDay = 232; // Default sat when time is between time 1 and 2.
+int briDay = 204; // Default brightness when time is between time 1 and 2.
+int hueNight = 0; // Default hue when time is not between time 1 and 2.
 int satNight = 255; // Default sat when time is not between time 1 and 2.
-int briNight = 255; // Default brightness when time is not between time 1 and 2.
+int briNight = 73; // Default brightness when time is not between time 1 and 2.
 
 //Configure FastLED / NEOPIXEL
 #define DATA_PIN D4
