@@ -44,15 +44,11 @@ char auth[] = "***";
 char ssid[] = "***";
 char pass[] = "***";
 
-/// Light start and stop
+// Light start and stop
 
-float inputStart = 6; // Default time on boot
-float inputStartMinut = 30;
-float inputStop = 19; // Default time on boot
-float inputStopMinut = 0;
-
-float hourandminute;
-
+const long secPerDay = 24L * 60L * 60L;
+long START1 = 4L * 60L * 60L; //
+long END1 = 19L * 60L * 60L; //
 int hueDay = 136; // Default hue when time is between time 1 and 2.
 int satDay = 232; // Default sat when time is between time 1 and 2.
 int briDay = 204; // Default brightness when time is between time 1 and 2.
@@ -67,6 +63,8 @@ int briNight = 73; // Default brightness when time is not between time 1 and 2.
 CRGB leds[NUM_LEDS];
 
 // End of configuration
+
+long INTERVAL1 = (END1 - START1 + secPerDay) % secPerDay; //
 
 int partymodeButton = 1;
 
@@ -108,19 +106,19 @@ BLYNK_WRITE(V0)
 }
 
 BLYNK_WRITE(V1) {
-  TimeInputParam t(param);
   long startTimeInSecs = param[0].asLong();
   Serial.println(startTimeInSecs / 60 / 60);
   Serial.println();
-  inputStart = t.getStartHour() + (t.getStartMinute() / 60);
+  START1 = startTimeInSecs;
+  INTERVAL1 = (END1 - START1 + secPerDay) % secPerDay;
 }
 
 BLYNK_WRITE(V2) {
-  TimeInputParam t(param);
   long startTimeInSecs = param[0].asLong();
   //Serial.println(startTimeInSecs / 60 / 60);
   //Serial.println();
-  inputStop = t.getStartHour() + (t.getStartMinute() / 60);
+  END1 = startTimeInSecs;
+  INTERVAL1 = (END1 - START1 + secPerDay) % secPerDay;
 }
 
 BLYNK_WRITE(V3)
@@ -190,41 +188,21 @@ BLYNK_WRITE(V8)
 }
 
 void writeLeds() {
-  hourandminute = hour() + (minute() / 60);
-  if (inputStop > inputStart) { // Time does not cross midnight
-    if (hourandminute >= inputStart && hourandminute <= inputStop) {
+long current_time = ( hour() * 60 * 60 ) + ( minute() * 60 );
+bool is_in_interval_1 = ((current_time - START1 + secPerDay) % secPerDay) < INTERVAL1;
+if (is_in_interval_1 = true) {
       for(int i=0;i<NUM_LEDS;i++){
         leds[i] = CHSV( hueDay, satDay, briDay);
       }
       FastLED.show();
     }
     else {
+    //Serial.println("The time is not inside range");
       for(int i=0;i<NUM_LEDS;i++){
       leds[i] = CHSV( hueNight, satNight, briNight);
       FastLED.show();
-     }
-    }
-  }
-  if (inputStop < inputStart) { // Time cross midnight
-    if (hourandminute >= inputStart && hourandminute >= inputStop) {
-      for(int i=0;i<NUM_LEDS;i++){
-        leds[i] = CHSV( hueDay, satDay, briDay);
       }
-      FastLED.show();
     }
-    else if (hourandminute <= inputStart && hourandminute <= inputStop) {
-      for(int i=0;i<NUM_LEDS;i++){
-        leds[i] = CHSV( hueDay, satDay, briDay);
-      }
-      FastLED.show();
-    }
-    else {
-      for(int i=0;i<NUM_LEDS;i++){
-      leds[i] = CHSV( hueNight, satNight, briNight);
-      FastLED.show();
-    }
-  }
- }
 }
 
 
@@ -264,11 +242,11 @@ void partyMode() {
 void updateVirtualpins() {
   Blynk.virtualWrite(V0, partymodeButton);
   char tz[] = "Europe/Oslo";
-  int startAtstart = inputStart * 60 * 60;
-  int stopAtstart = inputStart * 60 * 60;
+  int startAtstart = START1;
+  int stopAtstart = START1;
   Blynk.virtualWrite(V1, startAtstart, stopAtstart, tz);
-  int startAtstop = inputStop * 60 * 60;
-  int stopAtstop = inputStop * 60 * 60;
+  int startAtstop = END1;
+  int stopAtstop = END1;
   Blynk.virtualWrite(V2, startAtstop, stopAtstop, tz);
   Blynk.virtualWrite(V3, hueDay);
   Blynk.virtualWrite(V4, satDay);
@@ -284,7 +262,9 @@ void setup()
   ArduinoOTA.begin();
   // Debug console
   Serial.begin(9600);
-
+  long START1;
+  long END1;
+  long INTERVAL1;
   Blynk.begin(auth, ssid, pass);
   // You can also specify server:
   //Blynk.begin(auth, ssid, pass, "blynk-cloud.com", 8442);
@@ -292,8 +272,6 @@ void setup()
   // Begin synchronizing time
   rtc.begin();
   timer.setInterval(10000L, clockDisplay);
-  float inputStart = inputStart + inputStartMinut;
-  float inputStop = inputStop + inputStopMinut;
   FastLED.addLeds<NEOPIXEL, DATA_PIN>(leds, NUM_LEDS);
   updateVirtualpins();
 }
