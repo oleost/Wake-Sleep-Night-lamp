@@ -44,16 +44,21 @@ char auth[] = "***";
 char ssid[] = "***";
 char pass[] = "***";
 
-// Light start and stop
+/// Light start and stop
 
-int inputStart = 7; // Default time on boot
-int inputStop = 19; // Default time on boot
-int hueDay = 48; // Default hue when time is between time 1 and 2.
-int satDay = 255; // Default sat when time is between time 1 and 2.
-int briDay = 255; // Default brightness when time is between time 1 and 2.
-int hueNight = 169; // Default hue when time is not between time 1 and 2.
+float inputStart = 6; // Default time on boot
+float inputStartMinut = 30;
+float inputStop = 19; // Default time on boot
+float inputStopMinut = 0;
+
+float hourandminute;
+
+int hueDay = 136; // Default hue when time is between time 1 and 2.
+int satDay = 232; // Default sat when time is between time 1 and 2.
+int briDay = 204; // Default brightness when time is between time 1 and 2.
+int hueNight = 0; // Default hue when time is not between time 1 and 2.
 int satNight = 255; // Default sat when time is not between time 1 and 2.
-int briNight = 255; // Default brightness when time is not between time 1 and 2.
+int briNight = 73; // Default brightness when time is not between time 1 and 2.
 
 //Configure FastLED / NEOPIXEL
 #define DATA_PIN D4
@@ -103,17 +108,19 @@ BLYNK_WRITE(V0)
 }
 
 BLYNK_WRITE(V1) {
+  TimeInputParam t(param);
   long startTimeInSecs = param[0].asLong();
   Serial.println(startTimeInSecs / 60 / 60);
   Serial.println();
-  inputStart = startTimeInSecs / 60 / 60;
+  inputStart = t.getStartHour() + (t.getStartMinute() / 60);
 }
 
 BLYNK_WRITE(V2) {
+  TimeInputParam t(param);
   long startTimeInSecs = param[0].asLong();
   //Serial.println(startTimeInSecs / 60 / 60);
   //Serial.println();
-  inputStop = startTimeInSecs / 60 / 60;
+  inputStop = t.getStartHour() + (t.getStartMinute() / 60);
 }
 
 BLYNK_WRITE(V3)
@@ -183,34 +190,43 @@ BLYNK_WRITE(V8)
 }
 
 void writeLeds() {
-  unsigned long currentMillis = millis();
-  if (currentMillis - previousMillis >= interval) {
-    previousMillis = currentMillis;
-    //Serial.println(inputStart);
-    //Serial.println(inputStop);
-    if (hour() > inputStart && hour() < inputStop) {
-    /*Serial.println();
-    Serial.print("Time is between ");
-    Serial.print(inputStart);
-    Serial.print(" and ");
-    Serial.print(inputStop);
-    Serial.println();
-    Serial.println(hueDay);
-    */
+  hourandminute = hour() + (minute() / 60);
+  if (inputStop > inputStart) { // Time does not cross midnight
+    if (hourandminute >= inputStart && hourandminute <= inputStop) {
       for(int i=0;i<NUM_LEDS;i++){
         leds[i] = CHSV( hueDay, satDay, briDay);
       }
       FastLED.show();
     }
     else {
-    //Serial.println("The time is not inside range");
       for(int i=0;i<NUM_LEDS;i++){
       leds[i] = CHSV( hueNight, satNight, briNight);
       FastLED.show();
-      }
+     }
     }
   }
+  if (inputStop < inputStart) { // Time cross midnight
+    if (hourandminute >= inputStart && hourandminute >= inputStop) {
+      for(int i=0;i<NUM_LEDS;i++){
+        leds[i] = CHSV( hueDay, satDay, briDay);
+      }
+      FastLED.show();
+    }
+    else if (hourandminute <= inputStart && hourandminute <= inputStop) {
+      for(int i=0;i<NUM_LEDS;i++){
+        leds[i] = CHSV( hueDay, satDay, briDay);
+      }
+      FastLED.show();
+    }
+    else {
+      for(int i=0;i<NUM_LEDS;i++){
+      leds[i] = CHSV( hueNight, satNight, briNight);
+      FastLED.show();
+    }
+  }
+ }
 }
+
 
 void fadeall() { for(int i = 0; i < NUM_LEDS; i++) { leds[i].nscale8(250); } }
 
@@ -276,8 +292,8 @@ void setup()
   // Begin synchronizing time
   rtc.begin();
   timer.setInterval(10000L, clockDisplay);
-  int inputStart;
-  int inputStop;
+  float inputStart = inputStart + inputStartMinut;
+  float inputStop = inputStop + inputStopMinut;
   FastLED.addLeds<NEOPIXEL, DATA_PIN>(leds, NUM_LEDS);
   updateVirtualpins();
 }
