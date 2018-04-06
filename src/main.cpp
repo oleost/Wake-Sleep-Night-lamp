@@ -23,11 +23,13 @@ Sketch uses ArduinoOTA, default password is "Secret"
 #define BLYNK_PRINT Serial
 
 
+//#define FASTLED_RGBW // Uncomment this for RGBW support
+
 #include <ESP8266WiFi.h>
 #include <BlynkSimpleEsp8266.h>
 #include <TimeLib.h>
 #include <WidgetRTC.h>
-#include <FastLED.h>
+#include "FastLED.h"
 #include <WiFiUdp.h>
 #include <ArduinoOTA.h>
 
