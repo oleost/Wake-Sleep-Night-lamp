@@ -1,5 +1,5 @@
-# Wake&Sleep Nightlamp
-Nightlamp for kid, change colour depeding on time of day. ESP8266, Neopixel and Blynk based.
+# Wake&Sleep Night lamp
+Night lamp for kid, change colour depeding on time of day. ESP8266, Neopixel and Blynk based.
 
 This is used to change colour of Neopixel depending which time of day it is.
 
